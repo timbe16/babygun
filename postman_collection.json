@@ -1,0 +1,41 @@
+{
+	"variables": [],
+	"info": {
+		"name": "babymail",
+		"_postman_id": "014020ac-0c00-f741-17ce-2a72d991c4a9",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "http://localhost:5000/api/mail/send",
+			"request": {
+				"url": "http://localhost:5000/api/mail/send",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Client-Key",
+						"value": "kSOVNpXFAXng6GSDAjope1EUHe0QtV",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"to\": \"codee.duvid@zzi.us\",\n\t\"from\": \"\",\n\t\"subject\": \"test subject\",\n\t\"text\": \"texttext text\"\n}"
+				},
+				"description": "send mail"
+			},
+			"response": []
+		}
+	]
+}
