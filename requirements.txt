@@ -1,5 +1,6 @@
 alembic==0.9.5
 APScheduler==3.3.1
+bleach==2.0.0
 click==6.7
 Flask==0.12.2
 Flask-Migrate==2.1.1
@@ -7,6 +8,7 @@ Flask-Script==2.0.6
 Flask-SQLAlchemy==2.2
 funcsigs==1.0.2
 futures==3.1.1
+html5lib==0.999999999
 itsdangerous==0.24
 Jinja2==2.9.6
 Mako==1.0.7
@@ -14,8 +16,8 @@ MarkupSafe==1.0
 python-dateutil==2.6.1
 python-editor==1.0.3
 pytz==2017.2
-schedule==0.4.3
 six==1.10.0
 SQLAlchemy==1.1.14
 tzlocal==1.4
+webencodings==0.5.1
 Werkzeug==0.12.2

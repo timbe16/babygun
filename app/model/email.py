@@ -17,6 +17,7 @@ class Email(db.Model):
 
 class EmailStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    email_id = db.Column(db.Integer, nullable=False)
     status = db.Column(db.Text)
     sent_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
     delivered = db.Column(db.Boolean, nullable=False, default=True)
