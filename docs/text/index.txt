@@ -1,0 +1,54 @@
+Welcome to Babymail's documentation!
+************************************
+
+Contents:
+
+
+Indices and tables
+******************
+
+* Index
+
+* Module Index
+
+* Search Page
+
+
+Api details
+===========
+
++----------------------+-----------------------------------------------+-------------------------------------+
+| Resource             | Operation                                     | Description                         |
++======================+===============================================+=====================================+
+|                      | GET /api/mail/get_status/(int:id)             | Get email delivery status           |
++----------------------+-----------------------------------------------+-------------------------------------+
+|                      | POST /api/mail/send                           | Send email                          |
++----------------------+-----------------------------------------------+-------------------------------------+
+
+
+
+GET /api/mail/get_status/(int: id)
+
+   Get email delivery status.
+
+   Parameters:
+      * **(email_id)** (*int*) --
+
+   Returns:
+      bool status
+
+   Rtype:
+      json
+
+POST /api/mail/send
+
+   Send email to specific addresses.
+
+   Parameters:
+      * **(to, from, cc, bcc, subject, text)** (*json*) --
+
+   Returns:
+      int status_code, int email_id
+
+   Rtype:
+      json
