@@ -31,7 +31,7 @@ class SMTP():
 
         new_conn = self.open()
 
-        response = self.conn.sendmail(mail_from, mailto, message)
+        response = {}#self.conn.sendmail(mail_from, mailto, message)
 
         if new_conn:
             self.close()
