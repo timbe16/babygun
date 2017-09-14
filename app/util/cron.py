@@ -6,27 +6,28 @@ from app import app
 from sqlalchemy import func, exc
 from app.model.email import Email, EmailStatus
 from app.util.db import db
-from app.util.smtp import SMTP
+from app.util.mailer import mailer
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-SEND_INTERVAL_SEC = 10
+SEND_INTERVAL_SEC = 60
 
 
 def resend_mail():
     with app.app_context():
         since = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
+        to = datetime.datetime.utcnow() - datetime.timedelta(minutes=10)
         mails_failed = EmailStatus.query \
-            .filter(EmailStatus.delivered == False, EmailStatus.sent_at > since) \
+            .filter(EmailStatus.delivered == False, EmailStatus.sent_at > since, EmailStatus.sent_at < to) \
             .having(func.count_(EmailStatus.delivered) <= 2) \
             .group_by(EmailStatus.email_id, EmailStatus.delivered).all()
         result = EmailStatus.query.filter(EmailStatus.delivered == True, EmailStatus.sent_at > since).all()
         mails_success = [r.email_id for r in result]
-        mailer = SMTP(host=app.config['SMTP_HOST'], port=app.config['SMTP_PORT'], user=app.config['SMTP_USER'], password=app.config['SMTP_PASSWD'])
+
         for m in mails_failed:
             if m.email_id in mails_success:
                 continue
-            print "Resending email #" + str(m.email_id)
+            app.logger.warning("Resending email #" + str(m.email_id))
             mail_message = Email.query.filter(Email.id == m.email_id).first()
             mailto = [mail_message.mail_to]
             if mail_message.mail_cc is not None:
@@ -40,6 +41,9 @@ def resend_mail():
             try:
                 response = mailer.send_message(mail_message.mail_from, mailto, mail_message.body)
             except Exception as e:
+                app.logger.error(str(e))
+
+            if len(response) > 0:
                 app.logger.error('response')
                 app.logger.error(response)
 
@@ -54,7 +58,6 @@ def resend_mail():
                 db.session().rollback()
                 app.logger.error('db error')
                 app.logger.error(str(e))
-
 
 
 scheduler = BackgroundScheduler()

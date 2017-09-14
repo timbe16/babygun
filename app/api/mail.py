@@ -4,7 +4,7 @@ from app.api.api_helper import required_param, optional_param
 from app.util.authentication import auth_token_required, ERROR_LEVEL_API
 from app.model.email import Email, EmailStatus
 from app.util.db import db
-from app.util.smtp import SMTP
+from app.util.mailer import mailer
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from sqlalchemy import desc, exc
@@ -58,7 +58,6 @@ def sendmail():
     message.attach(MIMEText(mail_body, 'html'))
 
     try:
-        mailer = SMTP(host=app.config['SMTP_HOST'], port=app.config['SMTP_PORT'], user=app.config['SMTP_USER'], password=app.config['SMTP_PASSWD'])
         response = mailer.send_message(mail_from, mailto, message.as_string())
         app.logger.info('response')
         app.logger.info(response)
