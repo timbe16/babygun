@@ -48,7 +48,11 @@ POST /api/mail/send
       * **(to, from, cc, bcc, subject, text)** (*json*) --
 
    Returns:
-      int status_code, int email_id
+      int status_code, int email_id, str error_message
+
+      Status code list:
+      200 - ok, message sent
+      500 - something goes wrong
 
    Rtype:
       json

@@ -1,19 +1,16 @@
 import atexit
 import datetime
 import json
-import logging
-import sys
 
 from app import app
-from sqlalchemy import func
+from sqlalchemy import func, exc
 from app.model.email import Email, EmailStatus
 from app.util.db import db
 from app.util.smtp import SMTP
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-logging.basicConfig()
-SEND_INTERVAL_SEC = 60
+SEND_INTERVAL_SEC = 10
 
 
 def resend_mail():
@@ -32,24 +29,32 @@ def resend_mail():
             print "Resending email #" + str(m.email_id)
             mail_message = Email.query.filter(Email.id == m.email_id).first()
             mailto = [mail_message.mail_to]
-            # if mail_message.mail_cc is not None:
-            #     mailto += [mail_message.mail_cc]
-            # else:
-            #     mail_message.mail_cc = ""
-            # if mail_message.mail_bcc is not None:
-            #     mailto += [mail_message.mail_bcc]
-            # else:
-            #     mail_message.mail_bcc = ""
-            message = """From: %s\nTo: %s\nSubject: %s\n\n%s""" % (mail_message.mail_from, mail_message.mail_to, mail_message.mail_subj, mail_message.body)
-            response = mailer.send_message(mail_message.mail_from, mailto, message)
-            print "response:"
-            print response
-            mail_status = EmailStatus(email_id=m.email_id,
-                                      status=json.dumps(response),
-                                      delivered=False if response is False else True
-                                      )
-            db.session.add(mail_status)
-            db.session.commit()
+            if mail_message.mail_cc is not None:
+                mailto += [mail_message.mail_cc]
+            else:
+                mail_message.mail_cc = ""
+            if mail_message.mail_bcc is not None:
+                mailto += [mail_message.mail_bcc]
+            else:
+                mail_message.mail_bcc = ""
+            try:
+                response = mailer.send_message(mail_message.mail_from, mailto, mail_message.body)
+            except Exception as e:
+                app.logger.error('response')
+                app.logger.error(response)
+
+            try:
+                mail_status = EmailStatus(email_id=m.email_id,
+                                          status=json.dumps(response),
+                                          delivered=False if len(response) > 0 else True
+                                          )
+                db.session.add(mail_status)
+                db.session.commit()
+            except (Exception, exc) as e:
+                db.session().rollback()
+                app.logger.error('db error')
+                app.logger.error(str(e))
+
 
 
 scheduler = BackgroundScheduler()

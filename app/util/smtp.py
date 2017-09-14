@@ -1,7 +1,7 @@
 import smtplib
 
 
-class SMTP():
+class SMTP(object):
     def __init__(self, host, port, user, password):
         self.conn = None
         self.host = host
@@ -11,7 +11,7 @@ class SMTP():
 
     def open(self):
         if self.conn:
-            return False
+            return self.conn
 
         self.conn = smtplib.SMTP(self.host, self.port)
         self.conn.ehlo()
@@ -26,14 +26,8 @@ class SMTP():
         return None
 
     def send_message(self, mail_from, mailto, message):
-        if not mail_from or not mailto or not message:
-            return False
-
-        new_conn = self.open()
-
+        self.open()
         response = self.conn.sendmail(mail_from, mailto, message)
-
-        if new_conn:
-            self.close()
+        self.close()
 
         return response
