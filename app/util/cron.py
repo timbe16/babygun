@@ -11,7 +11,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 JOB_INTERVAL_SEC = 60
-SENDMAIL_INTERVAL_SEC = 600
+SENDMAIL_INTERVAL_MIN = 10
 
 
 def resend_mail():
@@ -19,7 +19,7 @@ def resend_mail():
         mails_failed = Email.query \
             .filter(
             Email.status == False,
-            Email.last_sent_at < (datetime.datetime.utcnow() - datetime.timedelta(minutes=SENDMAIL_INTERVAL_SEC)),
+            Email.last_sent_at < (datetime.datetime.utcnow() - datetime.timedelta(minutes=SENDMAIL_INTERVAL_MIN)),
             Email.counter < 4
         ).all()
 
