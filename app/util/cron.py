@@ -10,34 +10,28 @@ from app.util.mailer import mailer
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-SEND_INTERVAL_SEC = 60
+JOB_INTERVAL_SEC = 60
+SENDMAIL_INTERVAL_SEC = 600
 
 
 def resend_mail():
     with app.app_context():
-        since = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
-        to = datetime.datetime.utcnow() - datetime.timedelta(minutes=10)
-        mails_failed = EmailStatus.query \
-            .filter(EmailStatus.delivered == False, EmailStatus.sent_at > since, EmailStatus.sent_at < to) \
-            .having(func.count_(EmailStatus.delivered) <= 2) \
-            .group_by(EmailStatus.email_id, EmailStatus.delivered).all()
-        result = EmailStatus.query.filter(EmailStatus.delivered == True, EmailStatus.sent_at > since).all()
-        mails_success = [r.email_id for r in result]
+        mails_failed = Email.query \
+            .filter(
+            Email.status == False,
+            Email.last_sent_at < (datetime.datetime.utcnow() - datetime.timedelta(minutes=SENDMAIL_INTERVAL_SEC)),
+            Email.counter < 4
+        ).all()
 
-        for m in mails_failed:
-            if m.email_id in mails_success:
-                continue
-            app.logger.warning("Resending email #" + str(m.email_id))
-            mail_message = Email.query.filter(Email.id == m.email_id).first()
+        for mail_message in mails_failed:
+            app.logger.warning("Resending email #" + str(mail_message.id))
             mailto = [mail_message.mail_to]
-            if mail_message.mail_cc is not None:
+            response = {}
+            if mail_message.mail_cc is not None and mail_message.mail_cc:
                 mailto += [mail_message.mail_cc]
-            else:
-                mail_message.mail_cc = ""
-            if mail_message.mail_bcc is not None:
+            if mail_message.mail_bcc is not None and mail_message.mail_bcc:
                 mailto += [mail_message.mail_bcc]
-            else:
-                mail_message.mail_bcc = ""
+
             try:
                 response = mailer.send_message(mail_message.mail_from, mailto, mail_message.body)
             except Exception as e:
@@ -48,7 +42,10 @@ def resend_mail():
                 app.logger.error(response)
 
             try:
-                mail_status = EmailStatus(email_id=m.email_id,
+                mail_message.last_sent_at = datetime.datetime.utcnow()
+                mail_message.counter = mail_message.counter + 1
+                mail_message.status = False if len(response) > 0 else True
+                mail_status = EmailStatus(email_id=mail_message.id,
                                           status=json.dumps(response),
                                           delivered=False if len(response) > 0 else True
                                           )
@@ -61,6 +58,6 @@ def resend_mail():
 
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=resend_mail, trigger=IntervalTrigger(seconds=SEND_INTERVAL_SEC))
+scheduler.add_job(func=resend_mail, trigger=IntervalTrigger(seconds=JOB_INTERVAL_SEC))
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())

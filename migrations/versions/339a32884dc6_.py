@@ -25,7 +25,10 @@ def upgrade():
         sa.Column('mail_cc', sa.String(255), nullable=True),
         sa.Column('mail_bcc', sa.String(255), nullable=True),
         sa.Column('mail_subj', sa.String(255), nullable=True),
-        sa.Column('body', sa.Text, nullable=True)
+        sa.Column('body', sa.Text, nullable=True),
+        sa.Column('last_sent_at', sa.DateTime, server_default=sa.func.current_timestamp()),
+        sa.Column('status', sa.Boolean),
+        sa.Column('counter', sa.Integer(), nullable=False),
     )
     op.create_table(
         'email_status',

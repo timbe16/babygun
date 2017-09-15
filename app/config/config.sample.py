@@ -7,7 +7,7 @@ if INSTANCE_TYPE == "LOCAL":
     # sqlite for demo only
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:////' + os.path.dirname(os.path.abspath(__file__)) + '/app.db')
 else:
-    pass
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres@localhost/bmailgun')
 
 SMTP_HOST = os.getenv('SMTP_HOST', 'smtp.gmail.com')
 SMTP_PORT = os.getenv('SMTP_PORT', 587)

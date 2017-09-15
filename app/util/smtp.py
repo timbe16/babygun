@@ -21,8 +21,10 @@ class SMTP(object):
         return self.conn
 
     def close(self):
-        if self.conn:
-            return self.conn.quit()
+        if self.conn is not None:
+            self.conn.quit()
+            self.conn = None
+
         return None
 
     def send_message(self, mail_from, mailto, message):

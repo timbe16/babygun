@@ -10,6 +10,9 @@ class Email(db.Model):
     mail_bcc = db.Column(db.String(255), nullable=False)
     mail_subj = db.Column(db.String(255), nullable=False)
     body = db.Column(db.Text)
+    status = db.Column(db.Boolean)
+    last_sent_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    counter = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
         return "Email message #%s" % (self.id)
