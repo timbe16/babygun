@@ -57,7 +57,8 @@ def resend_mail():
                 app.logger.error(str(e))
 
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(func=resend_mail, trigger=IntervalTrigger(seconds=JOB_INTERVAL_SEC))
-scheduler.start()
-atexit.register(lambda: scheduler.shutdown())
+with app.app_context():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=resend_mail, trigger=IntervalTrigger(seconds=JOB_INTERVAL_SEC))
+    scheduler.start()
+    atexit.register(lambda: scheduler.shutdown())
