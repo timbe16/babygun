@@ -57,6 +57,7 @@ def sendmail():
     message["Bcc"] = mail_bcc
     message.attach(MIMEText(mail_body, 'html'))
 
+    # trying to send email immediately
     try:
         response = mailer.send_message(mail_from, mailto, message.as_string())
         app.logger.info('response')
@@ -110,7 +111,7 @@ def get_status(id):
     :rtype: json
     """
     response_dictionary = {}
-    mail = EmailStatus.query.filter(EmailStatus.email_id == id).order_by(desc(EmailStatus.sent_at)).first()
-    response_dictionary['status'] = mail.delivered
+    mail = Email.query.filter(Email.id == id).first()
+    response_dictionary['status'] = mail.status
 
     return jsonify(**response_dictionary)
