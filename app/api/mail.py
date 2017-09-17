@@ -25,11 +25,12 @@ def sendmail():
     :returns: int status_code, int email_id, str error_message
     | Status code list:
     | 200 - ok, message sent
+    | 300 - message sending is in progress
     | 500 - something goes wrong
     :rtype: json
     """
 
-    response_dictionary = {'status_code': 200}
+    response_dictionary = {'status_code': 300}
     response = {}
     content = request.get_json(force=True)
     mail_from = required_param(content, "from", str)
@@ -38,24 +39,24 @@ def sendmail():
     mail_bcc = optional_param(content, "bcc", str)
     mail_subj = bleach.clean(optional_param(content, "subject", str))
     mail_body = bleach.clean(optional_param(content, "text", str))
-    mailto = [mail_to]
+    recipients = [mail_to]
     if mail_cc is not None:
-        mailto += [mail_cc]
+        recipients += [mail_cc]
     else:
         mail_cc = ""
     if mail_bcc is not None:
-        mailto += [mail_bcc]
+        recipients += [mail_bcc]
     else:
         mail_bcc = ""
 
     # Prepare message
-    message = MIMEMultipart('alternative')
+    message = MIMEMultipart()
     message["Subject"] = mail_subj
     message["From"] = mail_from
     message["To"] = mail_to
     message["Cc"] = mail_cc
     message["Bcc"] = mail_bcc
-    message.attach(MIMEText(mail_body, 'html'))
+    message.attach(MIMEText(mail_body, 'plain'))
 
     try:
         mail = Email(mail_from=mail_from,
@@ -69,43 +70,13 @@ def sendmail():
                      )
         db.session.add(mail)
         db.session.commit()
+        response_dictionary['email_id'] = mail.id
     except (Exception, exc) as e:
         db.session().rollback()
         response_dictionary['status_code'] = 500
         response_dictionary['error_message'] = "db error"
         app.logger.error(str(e))
         return jsonify(**response_dictionary)
-
-    # trying to send email immediately
-    try:
-        response = mailer.send_message(mail_from, mailto, message.as_string())
-        app.logger.info('response')
-        app.logger.info(response)
-        # send_message will return an empty dictionary on success
-        # otherwise we will pass error message to the api
-        if len(response) > 0:
-            response_dictionary['status_code'] = 500
-            response_dictionary['error_message'] = response
-    except Exception as e:
-        response_dictionary['status_code'] = 500
-        response_dictionary['error_message'] = str(e)
-
-    # logging mail delivery status
-    try:
-        mail.status = False if response_dictionary['status_code'] != 200 else True
-        mail.counter = 1
-        response_dictionary['email_id'] = mail.id
-        mail_status = EmailStatus(email_id=mail.id,
-                                  status=json.dumps(response),
-                                  delivered=False if response_dictionary['status_code'] != 200 else True
-                                  )
-        db.session.add(mail_status)
-        db.session.commit()
-    except (Exception, exc) as e:
-        db.session().rollback()
-        response_dictionary['status_code'] = 500
-        response_dictionary['error_message'] = "db error"
-        app.logger.error(str(e))
 
     return jsonify(**response_dictionary)
 
@@ -122,7 +93,12 @@ def get_status(id):
     :rtype: json
     """
     response_dictionary = {}
-    mail = Email.query.filter(Email.id == id).first()
-    response_dictionary['status'] = mail.status
+    try:
+        mail = Email.query.filter(Email.id == id).first()
+        response_dictionary['status'] = mail.status
+    except (Exception, exc) as e:
+        response_dictionary['status_code'] = 500
+        response_dictionary['error_message'] = "db error"
+        app.logger.error(str(e))
 
     return jsonify(**response_dictionary)

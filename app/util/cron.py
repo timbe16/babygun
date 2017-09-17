@@ -1,6 +1,7 @@
 import atexit
 import datetime
 import json
+import time
 
 from app import app
 from sqlalchemy import func, exc
@@ -10,36 +11,40 @@ from app.util.mailer import mailer
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-JOB_INTERVAL_SEC = 60
-SENDMAIL_INTERVAL_MIN = 10
+JOB_INTERVAL_SEC = 10
+RETRY_INTERVAL_MIN = 10
 
 
-def resend_mail():
+def send_mail():
     with app.app_context():
+        mails_new = Email.query \
+            .filter(
+            Email.status == False,
+            Email.counter == 0
+        ).all()
         mails_failed = Email.query \
             .filter(
             Email.status == False,
-            Email.last_sent_at < (datetime.datetime.utcnow() - datetime.timedelta(minutes=SENDMAIL_INTERVAL_MIN)),
+            Email.last_sent_at < (datetime.datetime.utcnow() - datetime.timedelta(minutes=RETRY_INTERVAL_MIN)),
             Email.counter < 4
         ).all()
 
-        for mail_message in mails_failed:
-            app.logger.warning("Resending email #" + str(mail_message.id))
-            mailto = [mail_message.mail_to]
+        for mail_message in mails_new + mails_failed:
+            app.logger.info("Sending email #" + str(mail_message.id))
+            recipients = [mail_message.mail_to]
             response = {}
             if mail_message.mail_cc is not None and mail_message.mail_cc:
-                mailto += [mail_message.mail_cc]
+                recipients += [mail_message.mail_cc]
             if mail_message.mail_bcc is not None and mail_message.mail_bcc:
-                mailto += [mail_message.mail_bcc]
+                recipients += [mail_message.mail_bcc]
 
             try:
-                response = mailer.send_message(mail_message.mail_from, mailto, mail_message.body)
+                response = mailer.send_message(mail_message.mail_from, recipients, mail_message.body)
             except Exception as e:
                 app.logger.error(str(e))
 
             if len(response) > 0:
-                app.logger.error('response')
-                app.logger.error(response)
+                app.logger.error('response: ' + response)
 
             try:
                 mail_message.last_sent_at = datetime.datetime.utcnow()
@@ -59,6 +64,6 @@ def resend_mail():
 
 with app.app_context():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=resend_mail, trigger=IntervalTrigger(seconds=JOB_INTERVAL_SEC))
+    scheduler.add_job(func=send_mail, trigger=IntervalTrigger(seconds=JOB_INTERVAL_SEC))
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown())
