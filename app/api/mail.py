@@ -7,6 +7,7 @@ from app.util.db import db
 from app.util.mailer import mailer
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.header import Header
 from sqlalchemy import desc, exc
 import bleach
 import json
@@ -26,7 +27,9 @@ def sendmail():
     | Status code list:
     | 200 - ok, message sent
     | 300 - message sending is in progress
-    | 500 - something goes wrong
+    | 400 - wrong input params
+    | 401 - invalid client key
+    | 500 - internal error, something goes wrong
     :rtype: json
     """
 
@@ -51,12 +54,12 @@ def sendmail():
 
     # Prepare message
     message = MIMEMultipart()
-    message["Subject"] = mail_subj
+    message["Subject"] = Header(mail_subj, 'utf-8')
     message["From"] = mail_from
     message["To"] = mail_to
     message["Cc"] = mail_cc
     message["Bcc"] = mail_bcc
-    message.attach(MIMEText(mail_body, 'plain'))
+    message.attach(MIMEText(mail_body.encode('utf-8'), 'plain', 'utf-8'))
 
     try:
         mail = Email(mail_from=mail_from,

@@ -34,7 +34,7 @@ class JSONHTTPException(HTTPException):
         return [('Content-Type', 'application/json')]
 
 
-def _handle_error(status_code, error_level, error_code, error_content=None, error_message=None, headers=None):
+def _handle_error(status_code, error_content=None, error_message=None, headers=None):
     """
     Content for the error response.
 
@@ -46,8 +46,6 @@ def _handle_error(status_code, error_level, error_code, error_content=None, erro
     content = {}
 
     content['status_code'] = status_code
-    content['error_level'] = error_level
-    content['error_code'] = error_code
 
     if error_message:
         content['error_message'] = error_message
@@ -72,5 +70,5 @@ def _handle_error(status_code, error_level, error_code, error_content=None, erro
     flask_abort(make_response(error_cls(content), status_code, headers))
 
 
-def abort_request(status_code, error_level, error_code, error_content=None, error_message=None, headers=None):
-    _handle_error(status_code, error_level, error_code, error_content, error_message, headers)
+def abort_request(status_code, error_content=None, error_message=None, headers=None):
+    _handle_error(status_code, error_content, error_message, headers)

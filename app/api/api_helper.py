@@ -4,7 +4,6 @@ from flask import jsonify, request
 
 from app import app
 from app.util.exceptions import abort_request as abort
-from app.util.exceptions import ERROR_LEVEL_VALIDATION
 
 _number_types = [int, long, float]
 _str_types = [str, unicode]
@@ -18,7 +17,7 @@ def enforce_param_existence(content, param_name):
         error_message = '%s is a required parameter.' % param_name
         error_content = {}
         error_content['missing_parameter'] = param_name
-        abort(400, ERROR_LEVEL_VALIDATION, 0, error_content=error_content, error_message=error_message)
+        abort(400, error_content=error_content, error_message=error_message)
 
 
 def enforce_param_type(content, param_name, param_type, is_json=True):
@@ -28,7 +27,7 @@ def enforce_param_type(content, param_name, param_type, is_json=True):
     if is_json:
         param = content[param_name]
     else:
-        param = content.get(param_name, type=param_type)
+        param = content.get(param_name)
 
     if param_type in _number_types:
         is_valid = isinstance(param, numbers.Number)
@@ -44,7 +43,7 @@ def enforce_param_type(content, param_name, param_type, is_json=True):
         error_content = {}
         error_content['parameter_name'] = param_name
         error_content['expected_type'] = str(param_type)
-        abort(400, ERROR_LEVEL_VALIDATION, 1, error_content=error_content, error_message=error_message)
+        abort(400, error_content=error_content, error_message=error_message)
 
 
 def required_param(content, param_name, param_type, is_json=True):
@@ -55,7 +54,7 @@ def required_param(content, param_name, param_type, is_json=True):
     enforce_param_existence(content, param_name)
     enforce_param_type(content, param_name, param_type, is_json=is_json)
 
-    param = content[param_name] if is_json else content.get(param_name, type=param_type)
+    param = content[param_name] if is_json else content.get(param_name)
 
     return param
 
@@ -68,7 +67,7 @@ def optional_param(content, param_name, param_type, is_json=True):
     if is_json:
         param = content[param_name] if param_name in content else None
     else:
-        param = content.get(param_name, type=param_type)
+        param = content.get(param_name)
 
     if param:
         enforce_param_type(content, param_name, param_type, is_json)
@@ -88,4 +87,4 @@ def prohibited_param_check(content, *param_names):
             error_message = 'The parameter "%s" is not allowed in this configuration. (Debug)' % (param_name)
             error_content = {}
             error_content['parameter_name'] = param_name
-            abort(400, ERROR_LEVEL_VALIDATION, 2, error_content=error_content, error_message=error_message)
+            abort(400, error_content=error_content, error_message=error_message)

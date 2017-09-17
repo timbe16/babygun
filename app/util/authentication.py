@@ -7,7 +7,7 @@ from app import app
 def before_request():
     client_key = request.headers.get('Client-Key', None)
     if not client_key or (client_key != app.config['CLIENT_KEY']):
-        abort_request(401, ERROR_LEVEL_AUTHENTICATION, 0, error_message="Invalid client key.")
+        abort_request(401, error_message="Invalid client key.")
 
 
 def auth_token_required(fn):

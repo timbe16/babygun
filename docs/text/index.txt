@@ -52,7 +52,10 @@ POST /api/mail/send
 
       Status code list:
       200 - ok, message sent
-      500 - something goes wrong
+      300 - message sending is in progress
+      400 - wrong input params
+      401 - invalid client key
+      500 - internal error, something goes wrong
 
    Rtype:
       json
