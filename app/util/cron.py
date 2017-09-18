@@ -1,10 +1,8 @@
 import atexit
 import datetime
 import json
-import time
-
 from app import app
-from sqlalchemy import func, exc
+from sqlalchemy import exc
 from app.model.email import Email, EmailStatus
 from app.util.db import db
 from app.util.mailer import mailer
@@ -42,6 +40,7 @@ def send_mail():
                 response = mailer.send_message(mail_message.mail_from, recipients, mail_message.body)
             except Exception as e:
                 app.logger.error(str(e))
+                continue
 
             if len(response) > 0:
                 app.logger.error('response: ' + response)
@@ -58,8 +57,7 @@ def send_mail():
                 db.session.commit()
             except (Exception, exc) as e:
                 db.session.rollback()
-                app.logger.error('db error')
-                app.logger.error(str(e))
+                app.logger.error('db error: ' + str(e))
 
 
 with app.app_context():
