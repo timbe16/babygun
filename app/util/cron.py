@@ -40,10 +40,10 @@ def send_mail():
                 response = mailer.send_message(mail_message.mail_from, recipients, mail_message.body)
             except Exception as e:
                 app.logger.error(str(e))
-                continue
+                response["error"] = "smtp exception"
 
             if len(response) > 0:
-                app.logger.error('response: ' + response)
+                app.logger.error('response: ' + str(response))
 
             try:
                 mail_message.last_sent_at = datetime.datetime.utcnow()
