@@ -1,4 +1,4 @@
-# How to run
+## How to run
 
 - copy app/config/config.sample.py to app/config/config.py
 - change user/pass/host in app/config/config.py
@@ -10,4 +10,16 @@ or
 
 ```
 $ python run.py
+```
+
+## Update docs
+
+```
+$ make clean && make text
+```
+
+## Run test
+
+```
+$ nosetests
 ```

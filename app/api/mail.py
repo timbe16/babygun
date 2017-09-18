@@ -75,7 +75,7 @@ def sendmail():
         db.session.commit()
         response_dictionary['email_id'] = mail.id
     except (Exception, exc) as e:
-        db.session().rollback()
+        db.session.rollback()
         response_dictionary['status_code'] = 500
         response_dictionary['error_message'] = "db error"
         app.logger.error(str(e))

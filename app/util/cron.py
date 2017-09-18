@@ -57,7 +57,7 @@ def send_mail():
                 db.session.add(mail_status)
                 db.session.commit()
             except (Exception, exc) as e:
-                db.session().rollback()
+                db.session.rollback()
                 app.logger.error('db error')
                 app.logger.error(str(e))
 
